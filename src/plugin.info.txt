@@ -1,0 +1,7 @@
+base   piratihelper
+author Vaclav Malek
+email  vaclav.malek@pirati.cz
+date   2013-03-01
+name   Help functions
+desc   Help functions of Czech Pirate party
+url    https://www.pirati.cz
