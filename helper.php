@@ -24,6 +24,25 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
           if(!file_exists(DOKU_TEMP.'piratihelper')) mkdir(DOKU_TEMP.'piratihelper');
      }
 
+     /***** Dokuwiki API functions *****/
+
+     public function getID(){
+          global $ID;
+          return $ID;
+     }
+
+     public function isAction($action_type){
+          global $ACT;
+          switch(true){
+               case ($ACT==$action_type): return true;
+               default: return false;
+          }
+     }
+
+     /***** Graph API functions *****/
+
+     private $graph_url = 'https://graph.pirati.cz/';
+
      /**
       *
       *   @param[in] username optional parameter for username (return groups only from this user)
@@ -55,9 +74,9 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
                // groups
                $groups = curl_init();
                if($username){
-                    curl_setopt($groups,CURLOPT_URL,'https://graph.pirati.cz/user/'.$username.'/groups');
+                    curl_setopt($groups,CURLOPT_URL,$this->graph_url.'user/'.$username.'/groups');
                } else {
-                    curl_setopt($groups,CURLOPT_URL,'https://graph.pirati.cz/groups');
+                    curl_setopt($groups,CURLOPT_URL,$this->graph_url.'groups');
                }
                curl_setopt($groups,CURLOPT_HEADER,0);
                curl_setopt($groups,CURLOPT_RETURNTRANSFER,true);
@@ -67,7 +86,7 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
                     $data->groups = array();
                     foreach($groups_data as $i=>$grp){
                          $grps[$i] = curl_init();
-                         curl_setopt($grps[$i],CURLOPT_URL,'https://graph.pirati.cz/'.$grp->id);
+                         curl_setopt($grps[$i],CURLOPT_URL,$this->graph_url.$grp->id);
                          curl_setopt($grps[$i],CURLOPT_HEADER,0);
                          curl_setopt($grps[$i],CURLOPT_RETURNTRANSFER,true);
                          $data->groups[] = json_decode(curl_exec($grps[$i]));
@@ -98,8 +117,13 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
           $groups = $this->getGraphGroups($user->username);
 
           foreach($groups as $grp){
-               if(in_array($grp->id,$group_gaids)) return true;
+               if($allin){
+                    if(!in_array($grp->id,$group_gaids)) return false;
+               } else {
+                    if(in_array($grp->id,$group_gaids)) return true;
+               }
           }
+          if($allin) return true;
           return false;
      }
 
@@ -134,9 +158,9 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
                // users
                $users = curl_init();
                if($groupusername){
-                    curl_setopt($users,CURLOPT_URL,'https://graph.pirati.cz/group/'.$groupusername.'/members');
+                    curl_setopt($users,CURLOPT_URL,$this->graph_url.'group/'.$groupusername.'/members');
                } else {
-                    curl_setopt($users,CURLOPT_URL,'https://graph.pirati.cz/users');
+                    curl_setopt($users,CURLOPT_URL,$this->graph_url.'users');
                }
                curl_setopt($users,CURLOPT_HEADER,0);
                curl_setopt($users,CURLOPT_RETURNTRANSFER,true);
@@ -146,7 +170,7 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
                     $data->users = array();
                     foreach($users_data as $i=>$usr){
                          $usrs[$i] = curl_init();
-                         curl_setopt($usrs[$i],CURLOPT_URL,'https://graph.pirati.cz/'.$usr->id);
+                         curl_setopt($usrs[$i],CURLOPT_URL,$this->graph_url.$usr->id);
                          curl_setopt($usrs[$i],CURLOPT_HEADER,0);
                          curl_setopt($usrs[$i],CURLOPT_RETURNTRANSFER,true);
                          $data->users[] = json_decode(curl_exec($usrs[$i]));
@@ -171,7 +195,7 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
       */
      function getGraphUser($id){
           $user = curl_init();
-          curl_setopt($user,CURLOPT_URL,'https://graph.pirati.cz/'.$id);
+          curl_setopt($user,CURLOPT_URL,$this->graph_url.$id);
           curl_setopt($user,CURLOPT_HEADER,0);
           curl_setopt($user,CURLOPT_RETURNTRANSFER,true);
           return json_decode(curl_exec($user));
@@ -186,10 +210,9 @@ class helper_plugin_piratihelper extends DokuWiki_Plugin {
       * */
      function getGraphUserByUsername($username){
           $user = curl_init();
-          curl_setopt($user,CURLOPT_URL,'https://graph.pirati.cz/user/'.$username);
+          curl_setopt($user,CURLOPT_URL,$this->graph_url.'user/'.$username);
           curl_setopt($user,CURLOPT_HEADER,0);
           curl_setopt($user,CURLOPT_RETURNTRANSFER,true);
           return json_decode(curl_exec($user));
      }
 }
-
